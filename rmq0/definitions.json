@@ -1,0 +1,116 @@
+{
+    "rabbit_version": "3.13.7",
+    "rabbitmq_version": "3.13.7",
+    "product_name": "RabbitMQ",
+    "product_version": "3.13.7",
+    "users": [
+        {
+            "name": "guest",
+            "password_hash": "PpY4usBfRVqu1JKJe6PFpZG6ErxRKBooDu1XHHCLr5WSXo79",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": [
+                "administrator"
+            ],
+            "limits": {}
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/",
+            "description": "Default virtual host",
+            "tags": [],
+            "metadata": {
+                "description": "Default virtual host",
+                "tags": []
+            }
+        }
+    ],
+    "permissions": [
+        {
+            "user": "guest",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "topic_permissions": [],
+    "parameters": [
+        {
+            "value": {
+                "ack-mode": "on-confirm",
+                "prefetch-count": 200,
+                "reconnect-delay": 10,
+                "trust-user-id": false,
+                "uri": ["amqps://rmq0-us.local?cacertfile=/etc/rabbitmq/ca_certificate.pem",
+                        "amqps://rmq1-us.local?cacertfile=/etc/rabbitmq/ca_certificate.pem",
+                        "amqps://rmq2-us.local?cacertfile=/etc/rabbitmq/ca_certificate.pem"]
+            },
+            "vhost": "/",
+            "component": "federation-upstream",
+            "name": "fed-rmq-upstream"
+        }
+    ],
+    "global_parameters": [
+        {
+            "name": "internal_cluster_id",
+            "value": "rmq-ds-1202"
+        }
+    ],
+    "policies": [
+        {
+            "vhost": "/",
+            "name": "quorumfedqueues",
+            "pattern": "-fed$",
+            "apply-to": "quorum_queues",
+            "definition": {
+                "delivery-limit": 20,
+                "federation-upstream-set": "all",
+                "max-length": 300000,
+                "max-length-bytes": 524288000,
+                "queue-leader-locator": "balanced"
+            },
+            "priority": 25
+        }
+    ],
+    "queues": [
+        {
+            "name": "MyDEVQue3-fed",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-queue-type": "quorum"
+            }
+        },
+        {
+            "name": "MyDEVQue2-fed",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-queue-type": "quorum"
+            }
+        },
+        {
+            "name": "MyDEVQue1-fed",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-queue-type": "quorum"
+            }
+        },
+        {
+            "name": "MyDEVQue4-fed",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-queue-type": "quorum"
+            }
+        }
+    ],
+    "exchanges": [],
+    "bindings": []
+}

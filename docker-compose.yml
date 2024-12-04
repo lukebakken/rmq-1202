@@ -1,0 +1,179 @@
+networks:
+  rabbitnet:
+    name: rabbitnet
+    driver: bridge
+
+services:
+  rmq0-us:
+    build: rmq0-us
+    hostname: rmq0-us
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq0-us.local
+    volumes:
+      - ./data/rmq0-us:/var/lib/rabbitmq/mnesia
+      - ./log/rmq0-us:/var/log/rabbitmq
+  rmq1-us:
+    build: rmq1-us
+    hostname: rmq1-us
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq1-us.local
+    volumes:
+      - ./data/rmq1-us:/var/lib/rabbitmq/mnesia
+      - ./log/rmq1-us:/var/log/rabbitmq
+  rmq2-us:
+    build: rmq2-us
+    hostname: rmq2-us
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq2-us.local
+    volumes:
+      - ./data/rmq2-us:/var/lib/rabbitmq/mnesia
+      - ./log/rmq2-us:/var/log/rabbitmq
+  rmq0:
+    build: rmq0
+    hostname: rmq0
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq0.local
+    volumes:
+      - ./data/rmq0:/var/lib/rabbitmq/mnesia
+      - ./log/rmq0:/var/log/rabbitmq
+  rmq1:
+    build: rmq1
+    hostname: rmq1
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq1.local
+    volumes:
+      - ./data/rmq1:/var/lib/rabbitmq/mnesia
+      - ./log/rmq1:/var/log/rabbitmq
+  rmq2:
+    build: rmq2
+    hostname: rmq2
+    networks:
+      rabbitnet:
+        aliases:
+          - rmq2.local
+    volumes:
+      - ./data/rmq2:/var/lib/rabbitmq/mnesia
+      - ./log/rmq2:/var/log/rabbitmq
+  perf-test-us-1:
+    image: pivotalrabbitmq/perf-test:latest
+    networks:
+      - rabbitnet
+    command:
+      - --uri=amqp://haproxy.local:5673
+      - --servers-startup-timeout=45
+      - --rate=10
+      - --producers=1
+      - --consumers=0
+      - --confirm=4
+      - --confirm-timeout=60
+      - --flag=mandatory
+      - --flag=persistent
+      - --predeclared
+      - --queue=MyDEVQue1-fed
+      - --use-millis
+    depends_on:
+      - rmq0
+      - rmq1
+      - rmq2
+      - rmq0-us
+      - rmq1-us
+      - rmq2-us
+      - haproxy
+    restart: on-failure
+  perf-test-us-2:
+    image: pivotalrabbitmq/perf-test:latest
+    networks:
+      - rabbitnet
+    command:
+      - --uri=amqp://haproxy.local:5673
+      - --servers-startup-timeout=45
+      - --rate=10
+      - --producers=1
+      - --consumers=0
+      - --confirm=4
+      - --confirm-timeout=60
+      - --flag=mandatory
+      - --flag=persistent
+      - --predeclared
+      - --queue=MyDEVQue2-fed
+      - --use-millis
+    depends_on:
+      - rmq0
+      - rmq1
+      - rmq2
+      - rmq0-us
+      - rmq1-us
+      - rmq2-us
+      - haproxy
+    restart: on-failure
+  perf-test-ds-1:
+    image: pivotalrabbitmq/perf-test:latest
+    networks:
+      - rabbitnet
+    command:
+      - --uri=amqp://haproxy.local:5672
+      - --servers-startup-timeout=45
+      - --producers=0
+      - --consumers=1
+      - --predeclared
+      - --queue=MyDEVQue1-fed
+      - --use-millis
+    depends_on:
+      - rmq0
+      - rmq1
+      - rmq2
+      - rmq0-us
+      - rmq1-us
+      - rmq2-us
+      - haproxy
+    restart: on-failure
+  perf-test-ds-2:
+    image: pivotalrabbitmq/perf-test:latest
+    networks:
+      - rabbitnet
+    command:
+      - --uri=amqp://haproxy.local:5672
+      - --servers-startup-timeout=45
+      - --producers=0
+      - --consumers=1
+      - --predeclared
+      - --queue=MyDEVQue2-fed
+      - --use-millis
+    depends_on:
+      - rmq0
+      - rmq1
+      - rmq2
+      - rmq0-us
+      - rmq1-us
+      - rmq2-us
+      - haproxy
+    restart: on-failure
+  haproxy:
+    image: haproxy:latest
+    networks:
+      rabbitnet:
+        aliases:
+          - haproxy.local
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - rmq0
+      - rmq1
+      - rmq2
+      - rmq0-us
+      - rmq1-us
+      - rmq2-us
+    ports:
+      # HOST:CONTAINER
+      - 15672:15672
+      - 15673:15673
