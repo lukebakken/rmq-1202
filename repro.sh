@@ -10,6 +10,7 @@ for rmq in rmq0 rmq1
 do
     docker compose exec "$rmq" rabbitmqctl stop_app
     docker compose exec "$rmq" rabbitmqctl reset
+    sleep 60
     docker compose exec "$rmq" rabbitmqctl start_app
 done
 
